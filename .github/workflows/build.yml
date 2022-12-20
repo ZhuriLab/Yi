@@ -1,0 +1,53 @@
+name: 🎉 Build Binary
+on:
+  create:
+    tags:
+      - v*
+  workflow_dispatch:
+jobs:
+
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    steps:
+      - name: Set up Go 1.19
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Build On Linux
+        run: |
+          go build -ldflags "-s -w" -o Yi-Linux-x64 cmd/main.go
+          chmod +x Yi-Linux-x64
+        if: matrix.os == 'ubuntu-latest'
+      - name: Build On Darwin
+        run: |
+          go build -ldflags "-s -w" -o Yi-Darwin-x64 cmd/main.go
+          chmod +x Yi-Darwin-x64
+        if: matrix.os == 'macos-latest'
+      - name: Build On Windows
+        run: |
+          go build -ldflags "-s -w" -o Yi-Windows-x64.exe cmd/main.go
+        if: matrix.os == 'windows-latest'
+        env:
+          GOOS: windows
+          GOENABLE: 1
+      - name: Release
+        uses: softprops/action-gh-release@master
+        with:
+          files: Yi-*
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
