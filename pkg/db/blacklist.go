@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -17,6 +18,14 @@ type Blacklist struct {
 }
 
 func AddBlacklist(blacklist Blacklist) {
+	record := Record{
+		Color: "dark",
+		Title: "黑名单新增",
+		Msg:   fmt.Sprintf("%s", blacklist.Blacklist),
+	}
+
+	AddRecord(record)
+
 	GlobalDB.Create(&blacklist)
 }
 

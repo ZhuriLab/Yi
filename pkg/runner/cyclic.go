@@ -2,6 +2,7 @@ package runner
 
 import (
 	"Yi/pkg/db"
+	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -18,6 +19,7 @@ func Cyclic() {
 		// todo 不够优雅，万一监控的项目过多，导致一天还没执行完呢
 		// 等待24小时后再循环执行
 		time.Sleep(24 * 60 * time.Minute)
+		count := 0
 		today := time.Now().Format("2006-01-02") + "/"
 		DirNames = DirName{
 			ZipDir:    Pwd + "/db/zip/" + today,
@@ -56,6 +58,7 @@ func Cyclic() {
 					return
 				}
 
+				count++
 				project.DBPath = dbPath
 				project.PushedAt = pushedAt
 
@@ -68,6 +71,13 @@ func Cyclic() {
 
 		wg.Wait()
 		close(limit)
+
+		record := db.Record{
+			Color: "primary",
+			Title: "新一轮扫描",
+			Msg:   fmt.Sprintf("新一轮扫描结束, 总共扫描了 %d 个项目", count),
+		}
+		db.AddRecord(record)
 	}
 
 }

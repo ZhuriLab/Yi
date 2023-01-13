@@ -11,6 +11,7 @@ import (
 	"Yi/pkg/runner"
 	"Yi/pkg/utils"
 	"fmt"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
 	"net/http"
@@ -112,6 +113,15 @@ func Init() {
 		})
 	})
 
+	authorized.GET("/record", func(c *gin.Context) {
+		records := db.GetRecord()
+
+		c.HTML(http.StatusOK, "record.tmpl", gin.H{
+			"records": records,
+			"year":    time.Now().Year(),
+		})
+	})
+
 	authorized.GET("/vul", func(c *gin.Context) {
 
 		project := c.Query("project")
@@ -208,5 +218,6 @@ func Init() {
 		return
 	})
 
+	pprof.Register(router)
 	router.Run(":" + runner.Option.Port)
 }

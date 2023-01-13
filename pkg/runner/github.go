@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"Yi/pkg/db"
 	"Yi/pkg/logging"
 	"Yi/pkg/utils"
 	"encoding/json"
@@ -55,7 +56,9 @@ func DownloadDb(url_tmp string, language string) (error, string, *githubRes) {
 	}
 	req.Header.Set("User-Agent", uarand.GetRandom())
 	req.Close = true
-	resp, err := utils.Httpx(Option.Proxy).Do(req)
+
+	Option.Session.RateLimiter.Take()
+	resp, err := Option.Session.Client.Do(req)
 
 	if err != nil {
 		logging.Logger.Errorln(guri, "HttpRequest Do err: ", err)
@@ -89,6 +92,7 @@ func DownloadDb(url_tmp string, language string) (error, string, *githubRes) {
 	}
 
 	dbPath := filepath.Dir(path.Join(utils.CodeqlDb(DirNames.DbDir+name), "*"))
+	logging.Logger.Debugln(url_tmp, " downloadDb success.")
 	return nil, dbPath, res
 }
 
@@ -103,8 +107,8 @@ func GetRepos(guri string) *githubRes {
 	res := &githubRes{}
 
 	req.Close = true
-
-	resp, err := utils.Httpx(Option.Proxy).Do(req)
+	Option.Session.RateLimiter.Take()
+	resp, err := Option.Session.Client.Do(req)
 
 	if err != nil {
 		logging.Logger.Errorln("GetRepos client.Do(req) err:", err)
@@ -137,8 +141,8 @@ func GetLanguage(guri string) string {
 	}
 	req.Header.Set("User-Agent", uarand.GetRandom())
 	req.Close = true
-
-	resp, err := utils.Httpx(Option.Proxy).Do(req)
+	Option.Session.RateLimiter.Take()
+	resp, err := Option.Session.Client.Do(req)
 
 	if err != nil {
 		logging.Logger.Errorln("GetLanguage client.Do(req) err:", err)
@@ -186,6 +190,17 @@ func CheckUpdate(url string, lastTime string, name string) (bool, string, string
 	}
 
 	if dbPath != "" {
+		logging.Logger.Debugln(url, " update, start a new scan.", dbPath)
+
+		record := db.Record{
+			Project: name,
+			Url:     url,
+			Color:   "warning",
+			Title:   name + " 更新",
+			Msg:     fmt.Sprintf("%s 项目更新, 重新生成Codeql数据库", url),
+		}
+		db.AddRecord(record)
+
 		return true, dbPath, res.PushedAt
 	}
 

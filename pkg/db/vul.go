@@ -1,8 +1,10 @@
 package db
 
 import (
+	"fmt"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
+	"time"
 )
 
 /**
@@ -28,6 +30,19 @@ func AddVul(vul Vul) {
 	if ExistBlacklist(vul.Location.String()) {
 		return
 	}
+
+	record := Record{
+		Project: vul.Project,
+		Url:     vul.Url,
+		Color:   "danger",
+		Title:   vul.Project + " 发现漏洞",
+		Msg:     fmt.Sprintf("漏洞类型: %s", vul.RuleId),
+	}
+	AddRecord(record)
+
+	t, _ := time.Parse(time.RFC3339, vul.PushedAt)
+	vul.PushedAt = t.Format("2006-01-02 15:04:05")
+
 	GlobalDB.Create(&vul)
 }
 

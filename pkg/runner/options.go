@@ -27,6 +27,7 @@ type Options struct {
 	Path     string
 	Port     string
 	Thread   int
+	Session  *utils.Session
 }
 
 var Option Options
@@ -99,6 +100,8 @@ func ParseArguments() {
 	os.MkdirAll(DirNames.ResDir, 0755)
 	os.MkdirAll(DirNames.DbDir, 0755)
 	os.MkdirAll(DirNames.GithubDir, 0755)
+
+	Option.Session = utils.NewSession(Option.Proxy)
 
 	// 生成配置文件，并监控更改
 	Init()

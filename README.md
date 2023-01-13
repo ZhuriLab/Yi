@@ -80,7 +80,12 @@
 
 # 已知问题
 
--   [ ] http 请求时，时不时的出现 `EOF`
+-   [x] http 请求时，时不时的出现 `EOF` 解决方案：限制 github 访问速率
+
+
+# 🌟 Star
+
+[![Stargazers over time](https://starchart.cc/ZhuriLab/Yi.svg)](https://starchart.cc/ZhuriLab/Yi)
 
 # 📄 免责声明
 

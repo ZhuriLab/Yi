@@ -23,7 +23,7 @@ func init() {
 	}
 
 	// Migrate the schema
-	err = GlobalDB.AutoMigrate(&Vul{}, &Project{}, &Blacklist{})
+	err = GlobalDB.AutoMigrate(&Vul{}, &Project{}, &Blacklist{}, &Record{})
 	if err != nil {
 		logging.Logger.Errorf("db.Setup err: %v", err)
 	}

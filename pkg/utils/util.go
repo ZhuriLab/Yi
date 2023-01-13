@@ -1,12 +1,9 @@
 package utils
 
 import (
-	"crypto/tls"
 	"fmt"
 	"github.com/dustin/go-humanize"
 	"math/rand"
-	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -106,22 +103,9 @@ func StringInSlice(s string, slice []string) bool {
 	return false
 }
 
-func Httpx(proxy string) *http.Client {
-	tr := &http.Transport{
-		MaxIdleConnsPerHost: -1,
-		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
-		DisableKeepAlives:   true,
-	}
-	if proxy != "" {
-		uri, _ := url.Parse(proxy)
-		tr.Proxy = http.ProxyURL(uri)
-	}
-
-	client := &http.Client{
-		Transport: tr,
-	}
-
-	return client
+// isSupportedProtocol checks given protocols are supported
+func isSupportedProtocol(value string) bool {
+	return value == "http" || value == "https" || value == "socks5"
 }
 
 func Difference(slice1, slice2 []string) []string {

@@ -19,7 +19,7 @@ import (
 func Run() {
 	logging.Logger.Infoln("Yi Starting ... ")
 
-	projects := make(chan db.Project, Option.Thread)
+	projects := make(chan db.Project, 100)
 
 	go func() {
 		if Option.Target != "" {
@@ -147,6 +147,7 @@ func WgExec(project db.Project, wg *sync.WaitGroup, limit chan bool) {
 var LocationMaps = make(map[string]bool)
 
 func Exec(project db.Project, qls []string) {
+	logging.Logger.Debugln("start exec project: ", project.Project)
 	if !utils.StringInSlice(project.Language, Languages) {
 		return
 	}
@@ -196,7 +197,7 @@ func Exec(project db.Project, qls []string) {
 				db.AddVul(vul)
 
 				db.UpdateProjectArg(project.Id, "vul", 1)
-				logging.Logger.Infof("%s(%s) Found: %s", project.Project, fileName, msg)
+				logging.Logger.Infof("%s(%s) Found: %s", project.Project, fileName, results.Get(i).Get("ruleId").ToString())
 			}
 		} else {
 			err := os.Remove(fileName) //删除文件

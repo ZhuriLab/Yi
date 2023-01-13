@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -26,6 +27,16 @@ type Project struct {
 
 func AddProject(project Project) (int, int) {
 	GlobalDB.Create(&project)
+
+	record := Record{
+		Project: project.Project,
+		Url:     project.Url,
+		Color:   "success",
+		Title:   project.Project,
+		Msg:     fmt.Sprintf("%s添加成功", project.Url),
+	}
+	AddRecord(record)
+
 	return project.Id, project.Count
 }
 
