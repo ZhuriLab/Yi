@@ -92,7 +92,7 @@
 .vertical-timeline-element-content {
     position: relative;
     margin-left: 90px;
-    font-size: .8rem;
+    font-size: 1rem;
 }
 
 .vertical-timeline-element-content .timeline-msg {
@@ -103,7 +103,7 @@
     font-size: 1.1rem;
     text-transform: uppercase;
     margin: 0 0 .5rem;
-    padding: 2px 75px 0;
+    padding: 0px 75px 0;
     font-weight: bold;
 }
 

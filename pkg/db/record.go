@@ -30,6 +30,6 @@ func AddRecord(record Record) {
 
 func GetRecord() (records []Record) {
 	globalDBTmp := GlobalDB.Model(&Record{})
-	globalDBTmp.Order("id asc").Find(&records)
+	globalDBTmp.Order("id desc").Find(&records)
 	return
 }
