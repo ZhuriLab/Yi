@@ -89,3 +89,10 @@ func CreateDb(gurl string, res *githubRes, name string) string {
 	dbPath := filepath.Dir(path.Join(utils.CodeqlDb(DirNames.DbDir+dbName), "*"))
 	return dbPath
 }
+
+// UpdateRule 每天拉取一下官方仓库，更新规则
+func UpdateRule() {
+	if Option.Path != "" {
+		utils.RunGitCommand(Option.Path, "git", "pull")
+	}
+}

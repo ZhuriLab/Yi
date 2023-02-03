@@ -5,6 +5,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -139,4 +140,17 @@ func Difference(slice1, slice2 []string) []string {
 		}
 	}
 	return nn
+}
+
+// RunGitCommand 执行任意Git命令的封装
+func RunGitCommand(path, name string, arg ...string) (string, error) {
+	gitpath := path // 从配置文件中获取当前git仓库的路径
+
+	cmd := exec.Command(name, arg...)
+	cmd.Dir = gitpath                // 指定工作目录为git仓库目录
+	msg, err := cmd.CombinedOutput() // 混合输出stdout+stderr
+	cmd.Run()
+
+	// 报错时 exit status 1
+	return string(msg), err
 }
