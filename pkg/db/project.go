@@ -24,6 +24,7 @@ type Project struct {
 	Vul           int    `json:"vul"`
 	DefaultBranch string `json:"default_branch"`
 	LastScanTime  string
+	ProgressBar   string `json:"progress_bar"`
 }
 
 func AddProject(project Project) (int, int) {

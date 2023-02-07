@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"Yi/pkg/db"
 	"Yi/pkg/logging"
 	"Yi/pkg/utils"
 	"bytes"
@@ -34,7 +35,7 @@ func Analyze(database string, name string, language string, qls []string) map[st
 
 	logging.Logger.Infof("[[%s:%s]] analyze start ...", name, database)
 	fileName := fmt.Sprintf("%s/%d.json", filePath, time.Now().Unix())
-	for _, ql := range qls {
+	for i, ql := range qls {
 		cmd := exec.Command("codeql", "database", "analyze", "--rerun", database, Option.Path+ql, "--format=sarif-latest", "-o", fileName)
 		var stdout, stderr bytes.Buffer
 		cmd.Stdout = &stdout // 标准输出
@@ -54,9 +55,19 @@ func Analyze(database string, name string, language string, qls []string) map[st
 			result += i
 		}
 		res[fileName] = result
+
+		ProgressBar[name] = float32(i) / float32(len(qls)) * 100
 	}
 
-	logging.Logger.Infof("[[%s:%s]]  analysis completed.", name, database)
+	logging.Logger.Infof("[[%s:%s]] analysis completed.", name, database)
+	record := db.Record{
+		Project: name,
+		Url:     name,
+		Color:   "success",
+		Title:   name,
+		Msg:     fmt.Sprintf("%s 分析完毕", name),
+	}
+	db.AddRecord(record)
 	return res
 }
 

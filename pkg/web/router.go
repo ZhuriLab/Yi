@@ -99,6 +99,13 @@ func Init() {
 			t, _ := time.Parse(time.RFC3339, pro.PushedAt)
 			data[i].PushedAt = t.Format("2006-01-02 15:04:05")
 			data[i].LastScanTime = data[i].UpdatedAt.Format("2006-01-02 15:04:05")
+			probar := runner.ProgressBar[pro.Project]
+			if probar != 0 {
+				data[i].ProgressBar = fmt.Sprintf("%.f", probar) + "%"
+			} else {
+				data[i].ProgressBar = fmt.Sprintf("%.f", probar)
+			}
+
 		}
 
 		p := utils.NewPaginator(c.Request, pageSize, total)

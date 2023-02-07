@@ -9,6 +9,7 @@
         .table tbody tr td{
             vertical-align: middle;
         }
+
     </style>
     <title>Yi 以有算无</title>
 </head>
@@ -79,6 +80,7 @@
                 <th class="text-center">Count</th>
                 <th class="text-center">LastScanTime</th>
                 <th class="text-center">PushedAt</th>
+                <th class="text-center">Progress</th>
             </tr>
             </thead>
             <tbody>
@@ -117,9 +119,15 @@
 
                     <td class="text-center">{{ $value.LastScanTime }}</td>
                     <td class="text-center">{{ $value.PushedAt }}</td>
+                    <td class="text-center">
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: {{ $value.ProgressBar }}%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">{{ $value.ProgressBar }}</div>
+                        </div>
+                    </td>
                 </tr>
             {{ else }}
                 <tr>
+                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>

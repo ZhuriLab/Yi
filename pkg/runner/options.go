@@ -43,6 +43,8 @@ var DirNames DirName
 
 var Pwd string
 
+var ProgressBar map[string]float32
+
 // Languages Codeql支持的语言，这里要根据机器上的配置，若要支持其他语言，请自行安装语言，以及指定对应语言的 codeql 规则
 var Languages = []string{"Go", "Java"}
 
@@ -106,4 +108,6 @@ func ParseArguments() {
 	// 生成配置文件，并监控更改
 	Init()
 	HotConf()
+
+	ProgressBar = make(map[string]float32)
 }
