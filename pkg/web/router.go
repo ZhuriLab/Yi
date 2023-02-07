@@ -10,10 +10,12 @@ import (
 	"Yi/pkg/db"
 	"Yi/pkg/runner"
 	"Yi/pkg/utils"
+	"embed"
 	"fmt"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
+	"html/template"
 	"net/http"
 	"os"
 	"strconv"
@@ -31,18 +33,29 @@ type Vul struct {
 	ResDir   string
 }
 
+//go:embed static
+var static embed.FS
+
+//go:embed templates
+var templates embed.FS
+
 func Init() {
 	gin.SetMode("release")
 	router := gin.Default()
 
 	// 静态资源加载
-	router.Static("/static", Path("static"))
+	//router.Static("/static", Path("static"))
+
+	router.StaticFS("/static", http.FS(static))
 
 	router.Static("/db/results/", "./db/results/")
 
 	// 模板加载
-	templatesPath := Path("templates/*")
-	router.LoadHTMLGlob(templatesPath)
+	//templatesPath := Path("templates/*")
+	//router.LoadHTMLGlob(templatesPath)
+
+	// 设置模板资源
+	router.SetHTMLTemplate(template.Must(template.New("").ParseFS(templates, "templates/*")))
 
 	// basic 认证
 	authorized := router.Group("/", gin.BasicAuth(gin.Accounts{
@@ -95,13 +108,25 @@ func Init() {
 			"projects":  data,
 			"paginator": p,
 			"year":      time.Now().Year(),
+			"msg":       db.Msg,
 		})
 	})
 
 	authorized.GET("/addProject", func(c *gin.Context) {
 		url := c.Query("url")
+		tag := c.Query("tag")
 		if url != "" {
-			go runner.ApiAdd(url)
+			url = strings.TrimRight(url, "/")
+			record := db.Record{
+				Project: url,
+				Url:     url,
+				Color:   "success",
+				Title:   url,
+				Msg:     fmt.Sprintf("%s 添加成功, 正在生成数据库...", url),
+			}
+			db.AddRecord(record)
+
+			go runner.ApiAdd(url, tag)
 			c.Redirect(302, "/index")
 		}
 
@@ -110,15 +135,18 @@ func Init() {
 	authorized.GET("/about", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "about.tmpl", gin.H{
 			"year": time.Now().Year(),
+			"msg":  db.Msg,
 		})
 	})
 
 	authorized.GET("/record", func(c *gin.Context) {
 		records := db.GetRecord()
 
+		db.Msg = 0
 		c.HTML(http.StatusOK, "record.tmpl", gin.H{
 			"records": records,
 			"year":    time.Now().Year(),
+			"msg":     db.Msg,
 		})
 	})
 
@@ -177,6 +205,7 @@ func Init() {
 			"vuls":      vuls,
 			"paginator": p,
 			"year":      time.Now().Year(),
+			"msg":       db.Msg,
 		})
 	})
 

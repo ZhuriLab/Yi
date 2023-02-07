@@ -3,6 +3,7 @@ package test
 import (
 	"Yi/pkg/db"
 	"Yi/pkg/runner"
+	"Yi/pkg/utils"
 	"Yi/pkg/web"
 	"fmt"
 	"testing"
@@ -25,6 +26,7 @@ func TestDb(t *testing.T) {
 }
 
 func TestWeb(t *testing.T) {
+	runner.Option.Session = utils.NewSession("")
 	runner.Option.UserName = "yhy"
 	runner.Option.Pwd = "123"
 	runner.Option.Port = "8888"

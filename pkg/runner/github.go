@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/corpix/uarand"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/thoas/go-funk"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -156,9 +157,9 @@ func GetLanguage(guri string) string {
 		body, _ := ioutil.ReadAll(resp.Body)
 		results := jsoniter.Get(body).Keys()
 
-		if utils.StringInSlice("Go", results) {
+		if funk.Contains(results, "Go") {
 			return "Go"
-		} else if utils.StringInSlice("Java", results) {
+		} else if funk.Contains(results, "Java") {
 			return "Java"
 		}
 	}

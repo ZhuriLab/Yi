@@ -14,6 +14,7 @@ require (
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.14.0
+	github.com/thoas/go-funk v0.9.3
 	go.uber.org/ratelimit v0.2.0
 	golang.org/x/crypto v0.0.0-20221005025214-4161e89ecf1b
 	gorm.io/datatypes v1.1.0

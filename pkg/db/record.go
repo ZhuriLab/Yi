@@ -11,6 +11,8 @@ import (
   @desc: //TODO
 **/
 
+var Msg int
+
 type Record struct {
 	gorm.Model
 	Id          int    `gorm:"primary_key" json:"id"`
@@ -24,8 +26,10 @@ type Record struct {
 
 func AddRecord(record Record) {
 	record.CurrentTime = time.Now().Format("2006-01-02 15:04:05")
-	// 	record.CurrentTime = fmt.Sprintf("%s/%d %d:%d", t.Format("01"), t.Day(), t.Hour(), t.Minute())
+
 	GlobalDB.Create(&record)
+
+	Msg++
 }
 
 func GetRecord() (records []Record) {

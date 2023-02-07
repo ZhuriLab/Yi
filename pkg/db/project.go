@@ -17,6 +17,7 @@ type Project struct {
 	Project       string `json:"project"`
 	Url           string `json:"url"`
 	Language      string `json:"language"`
+	Tag           string `json:"tag"`
 	DBPath        string `json:"db_path"`
 	Count         int    `json:"count"`
 	PushedAt      string `json:"pushed_at"`
@@ -33,7 +34,7 @@ func AddProject(project Project) (int, int) {
 		Url:     project.Url,
 		Color:   "success",
 		Title:   project.Project,
-		Msg:     fmt.Sprintf("%s添加成功", project.Url),
+		Msg:     fmt.Sprintf("%s 添加成功", project.Url),
 	}
 	AddRecord(record)
 

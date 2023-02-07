@@ -7,6 +7,7 @@ import (
 	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -23,6 +24,7 @@ func Run() {
 
 	go func() {
 		if Option.Target != "" {
+			Option.Target = strings.TrimRight(Option.Target, "/")
 			exist, project := db.Exist(Option.Target)
 			if exist {
 				projects <- project
@@ -59,6 +61,7 @@ func Run() {
 			var wg sync.WaitGroup
 
 			for _, target := range targets {
+				target = strings.TrimRight(target, "/")
 				limit <- true
 				wg.Add(1)
 				go func(target string) {
@@ -210,7 +213,7 @@ func Exec(project db.Project, qls []string) {
 	db.UpdateProjectArg(project.Id, "count", project.Count+1)
 }
 
-func ApiAdd(target string) {
+func ApiAdd(target, tag string) {
 	var exist bool
 	var project db.Project
 	exist, project = db.Exist(target)
@@ -218,12 +221,21 @@ func ApiAdd(target string) {
 		name := utils.GetName(target)
 		err, dbPath, res := DownloadDb(target, "")
 		if err != nil {
+			record := db.Record{
+				Project: target,
+				Url:     target,
+				Color:   "danger",
+				Title:   target,
+				Msg:     fmt.Sprintf("%s 添加失败 %v", target, err),
+			}
+			db.AddRecord(record)
 			return
 		}
 		project = db.Project{
 			Project:       name,
 			DBPath:        dbPath,
 			Url:           target,
+			Tag:           tag,
 			Language:      res.Language,
 			PushedAt:      res.PushedAt,
 			DefaultBranch: res.DefaultBranch,

@@ -32,7 +32,16 @@
             <ul class="nav nav-pills">
                 <li class="nav-item"><a href="/index" class="nav-link active" aria-current="page">监控项目</a></li>
                 <li class="nav-item"><a href="/vul" class="nav-link">漏洞信息</a></li>
-                <li class="nav-item"><a href="/record" class="nav-link">记录</a></li>
+                {{if eq .msg 0 }}
+                    <li class="nav-item"><a href="/record" class="nav-link">记录</a></li>
+                {{ else}}
+                    <li class="nav-item position-relative">
+                        <a href="/record" class="nav-link" aria-current="page">记录</a>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{.msg}}+
+                            <span class="visually-hidden">unread messages</span>
+                        </span>
+                    </li>
+                {{ end }}
                 <li class="nav-item"><a href="/about" class="nav-link">关于</a></li>
             </ul>
         </header>
@@ -76,9 +85,13 @@
             {{ range $key,$value := .projects }}
                 <tr>
                     {{if eq $value.Vul 1}}
-                        <td class="text-center text-danger">{{ $value.Project }}</td>
+                        <td class="text-center text-danger">
+                            {{ $value.Project }} <span class="badge bg-primary">{{ $value.Tag }}</span>
+                        </td>
                     {{ else}}
-                        <td class="text-center">{{ $value.Project }}</td>
+                        <td class="text-center ">
+                            {{ $value.Project }} <span class="badge bg-primary">{{ $value.Tag }}</span>
+                        </td>
                     {{end}}
 
                     <td class="text-center"><a href="{{ $value.Url }}" target="_blank">{{ $value.Url }} </a></td>
@@ -164,6 +177,8 @@
                         <div class="mb-3 mt-3">
                             <label for="url" class="form-label">Url:</label>
                             <input type="url" class="form-control" id="url" placeholder="Enter url" name="url">
+                            <label for="tag" class="form-label">Tag:</label>
+                            <input type="text" class="form-control" id="text" placeholder="Enter tag" name="tag">
                         </div>
                 </div>
                 <!-- 模态框底部 -->
