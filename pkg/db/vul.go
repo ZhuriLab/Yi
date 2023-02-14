@@ -23,7 +23,8 @@ type Vul struct {
 	PushedAt      string `json:"pushed_at"`
 	Location      datatypes.JSON
 	//CodeFlows     string `gorm:"type:text"`
-	ResDir string `json:"res_dir"`
+	ResDir  string `json:"res_dir"`
+	Handled bool   `json:"handled"`
 }
 
 func AddVul(vul Vul) {
@@ -46,8 +47,8 @@ func AddVul(vul Vul) {
 	GlobalDB.Create(&vul)
 }
 
-// GetVuls 查看漏洞信息
-func GetVuls(pageNum int, pageSize int, maps interface{}) (count int64, vuls []Vul) {
+// GetVulsHandled 查看漏洞信息
+func GetVulsHandled(pageNum int, pageSize int, maps interface{}) (count int64, vuls []Vul) {
 	globalDBTmp := GlobalDB.Model(&Vul{})
 	query := maps.(map[string]interface{})
 
@@ -59,8 +60,35 @@ func GetVuls(pageNum int, pageSize int, maps interface{}) (count int64, vuls []V
 		globalDBTmp = globalDBTmp.Where("rule_id LIKE ?", "%"+query["rule_id"].(string)+"%")
 	}
 
-	globalDBTmp.Count(&count)
+	globalDBTmp.Where("handled = 1").Count(&count)
+
 	globalDBTmp.Offset(pageNum).Limit(pageSize).Order("id asc").Find(&vuls)
+
+	return
+}
+
+func GetVulsUnHandled(pageNum int, pageSize int, maps interface{}) (count int64, vuls []Vul) {
+	globalDBTmp := GlobalDB.Model(&Vul{})
+	query := maps.(map[string]interface{})
+
+	if query["project"] != nil {
+		globalDBTmp = globalDBTmp.Where("project LIKE ?", "%"+query["project"].(string)+"%")
+	}
+
+	if query["rule_id"] != nil {
+		globalDBTmp = globalDBTmp.Where("rule_id LIKE ?", "%"+query["rule_id"].(string)+"%")
+	}
+
+	globalDBTmp.Where("handled = ?", false).Count(&count)
+
+	globalDBTmp.Offset(pageNum).Limit(pageSize).Order("id asc").Find(&vuls)
+
+	return
+}
+
+func VulTotal() (count int64) {
+	globalDBTmp := GlobalDB.Model(&Vul{})
+	globalDBTmp.Count(&count)
 
 	return
 }
@@ -74,11 +102,17 @@ func DeleteVul(id string) {
 func ExistVul(id string) (bool, Vul) {
 	var vul Vul
 	globalDBTmp := GlobalDB.Model(&Vul{})
-	globalDBTmp.Where("id = ? ", id).Limit(1).First(&vul)
+	globalDBTmp.Where("id = ?", id).Limit(1).First(&vul)
 
 	if vul.Id > 0 {
 		return true, vul
 	}
 
 	return false, vul
+}
+
+// UpdateHandled 更新字段
+func UpdateHandled(id string) {
+	globalDBTmp := GlobalDB.Model(&Vul{})
+	globalDBTmp.Where("id = ?", id).Update("handled", true)
 }

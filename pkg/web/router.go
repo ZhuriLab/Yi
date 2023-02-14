@@ -45,15 +45,12 @@ func Init() {
 
 	// 静态资源加载
 	//router.Static("/static", Path("static"))
-
-	router.StaticFS("/static", http.FS(static))
-
-	router.Static("/db/results/", "./db/results/")
-
-	// 模板加载
+	//// 模板加载
 	//templatesPath := Path("templates/*")
 	//router.LoadHTMLGlob(templatesPath)
 
+	router.Static("/db/results/", "./db/results/")
+	router.StaticFS("/static", http.FS(static))
 	// 设置模板资源
 	router.SetHTMLTemplate(template.Must(template.New("").ParseFS(templates, "templates/*")))
 
@@ -157,7 +154,66 @@ func Init() {
 		})
 	})
 
-	authorized.GET("/vul", func(c *gin.Context) {
+	authorized.GET("/unhandled", func(c *gin.Context) {
+		project := c.Query("project")
+		rule_id := c.Query("rule_id")
+
+		maps := make(map[string]interface{})
+
+		if project != "" {
+			maps["project"] = project
+		}
+		if rule_id != "" {
+			maps["rule_id"] = rule_id
+		}
+
+		pageSize, _ := strconv.Atoi(c.Query("pageSize"))
+
+		if pageSize == 0 {
+			pageSize = 10
+		}
+
+		result := 0
+		page, _ := strconv.Atoi(c.Query("current"))
+		if page == 0 {
+			page = 1
+		} else if page > 0 {
+			result = (page - 1) * pageSize
+		}
+
+		t1, data := db.GetVulsUnHandled(result, pageSize, maps)
+
+		total := db.VulTotal()
+
+		var vuls []Vul
+		for _, vul := range data {
+			location := make(map[string]string)
+			for _, k := range jsoniter.Get(vul.Location).Keys() {
+				location[k] = fmt.Sprintf("%s/blob/%s/%s", vul.Url, vul.DefaultBranch, k)
+			}
+			vuls = append(vuls, Vul{
+				Id:       vul.Id,
+				Project:  vul.Project,
+				RuleId:   vul.RuleId,
+				Url:      vul.Url,
+				Location: location,
+				PushedAt: vul.PushedAt,
+				ResDir:   vul.ResDir,
+			})
+		}
+
+		p := utils.NewPaginator(c.Request, pageSize, t1)
+
+		c.HTML(http.StatusOK, "vulUnHandled.tmpl", gin.H{
+			"total":     total,
+			"vuls":      vuls,
+			"paginator": p,
+			"year":      time.Now().Year(),
+			"msg":       db.Msg,
+		})
+	})
+
+	authorized.GET("/handled", func(c *gin.Context) {
 
 		project := c.Query("project")
 		rule_id := c.Query("rule_id")
@@ -185,7 +241,9 @@ func Init() {
 			result = (page - 1) * pageSize
 		}
 
-		total, data := db.GetVuls(result, pageSize, maps)
+		t1, data := db.GetVulsHandled(result, pageSize, maps)
+
+		total := db.VulTotal()
 
 		var vuls []Vul
 		for _, vul := range data {
@@ -193,7 +251,6 @@ func Init() {
 			for _, k := range jsoniter.Get(vul.Location).Keys() {
 				location[k] = fmt.Sprintf("%s/blob/%s/%s", vul.Url, vul.DefaultBranch, k)
 			}
-
 			vuls = append(vuls, Vul{
 				Id:       vul.Id,
 				Project:  vul.Project,
@@ -205,15 +262,21 @@ func Init() {
 			})
 		}
 
-		p := utils.NewPaginator(c.Request, pageSize, total)
+		p := utils.NewPaginator(c.Request, pageSize, t1)
 
-		c.HTML(http.StatusOK, "vulnerability.tmpl", gin.H{
+		c.HTML(http.StatusOK, "vulHandled.tmpl", gin.H{
 			"total":     total,
 			"vuls":      vuls,
 			"paginator": p,
 			"year":      time.Now().Year(),
 			"msg":       db.Msg,
 		})
+	})
+
+	authorized.GET("/setHandled", func(c *gin.Context) {
+		id := c.Query("id")
+		db.UpdateHandled(id)
+		c.Redirect(302, "/unhandled")
 	})
 
 	authorized.GET("/blacklist", func(c *gin.Context) {
@@ -225,13 +288,13 @@ func Init() {
 			db.AddBlacklist(db.Blacklist{Blacklist: vul.Location.String()})
 		}
 
-		c.Redirect(302, "/vul")
+		c.Redirect(302, "/unhandled")
 	})
 
 	authorized.GET("/del", func(c *gin.Context) {
 		id := c.Query("id")
 		db.DeleteVul(id)
-		c.Redirect(302, "/vul")
+		c.Redirect(302, "/unhandled")
 	})
 
 	authorized.GET("/download", func(c *gin.Context) {

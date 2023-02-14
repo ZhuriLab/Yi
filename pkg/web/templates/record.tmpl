@@ -7,7 +7,7 @@
     <script src="https://cdn.staticfile.org/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
 
     <link href='/static/record.css' rel='stylesheet'>
-    <title>Yi 以有算无</title>
+    <title>弈 以有算无</title>
 </head>
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -22,12 +22,12 @@
         <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
             <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
                 <svg class="bi me-2" width="40" height="32"><use xlink:href="#yi"/></svg>
-                <span class="fs-4">Yi 以有算无</span>
+                <span class="fs-4">弈 以有算无</span>
             </a>
 
             <ul class="nav nav-pills">
                 <li class="nav-item"><a href="/index" class="nav-link">监控项目</a></li>
-                <li class="nav-item"><a href="/vul" class="nav-link">漏洞信息</a></li>
+                <li class="nav-item"><a href="/unhandled" class="nav-link">漏洞信息</a></li>
                 {{if eq .msg 0}}
                     <li class="nav-item"><a href="/record" class="nav-link active">记录</a></li>
                 {{ else}}

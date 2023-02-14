@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.staticfile.org/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="/static/jquery.json-viewer.js"></script>
+    <link href="/static/jquery.json-viewer.css" type="text/css" rel="stylesheet">
+
+    <style>
+        pre {
+            border: 1px solid #aaa;
+        }
+        .table tbody tr td{
+            vertical-align: middle;
+        }
+    </style>
+
+
+    <title>弈 以有算无</title>
+</head>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <symbol id="yi" viewBox="0 0 496 512">
+        <path d="M248 8C111.03 8 0 119.03 0 256s111.03 248 248 248 248-111.03 248-248S384.97 8 248 8zm0 376c-17.67 0-32-14.33-32-32s14.33-32 32-32 32 14.33 32 32-14.33 32-32 32zm0-128c-53.02 0-96 42.98-96 96s42.98 96 96 96c-106.04 0-192-85.96-192-192S141.96 64 248 64c53.02 0 96 42.98 96 96s-42.98 96-96 96zm0-128c-17.67 0-32 14.33-32 32s14.33 32 32 32 32-14.33 32-32-14.33-32-32-32z"/>
+    </symbol>
+</svg>
+
+
+<main>
+    <div class="container">
+        <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+            <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+                <svg class="bi me-2" width="40" height="32"><use xlink:href="#yi"/></svg>
+                <span class="fs-4">弈 以有算无</span>
+            </a>
+
+            <ul class="nav nav-pills">
+                <li class="nav-item"><a href="/index" class="nav-link">监控项目</a></li>
+                <li class="nav-item"><a href="/unhandled" class="nav-link active" aria-current="page">漏洞信息</a></li>
+                {{if eq .msg 0}}
+                    <li class="nav-item"><a href="/record" class="nav-link">记录</a></li>
+                {{ else}}
+                    <li class="nav-item position-relative">
+                        <a href="/record" class="nav-link" aria-current="page">记录</a>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{.msg}}+
+                            <span class="visually-hidden">unread messages</span>
+                        </span>
+                    </li>
+                {{ end }}
+                <li class="nav-item"><a href="/about" class="nav-link">关于</a></li>
+            </ul>
+        </header>
+    </div>
+
+</main>
+
+<body>
+    <div class="container mt-3">
+    <div class="px-3 py-2 mb-3">
+        <div class="container  flex-wrap justify-content-center">
+            <form class="col-12 col-lg-auto mb-2 mb-lg-0 me-lg-auto">
+                <input type="search" class="form-control" placeholder="Search..." aria-label="Search" name="project">
+            </form>
+        </div>
+    </div>
+    <div class="container mt-3">
+        <ul class="nav">
+            <li class="nav-item col-11">
+                <h2 class="list-inline-item">漏洞信息 <text class="text-muted">({{ .total }}) {{.location}}</text></h2>
+            </li>
+        </ul>
+    </div>
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item"><a class="nav-link" href="/unhandled">未处理</a></li>
+        <li class="nav-item"><a href="/handled " class="nav-link active">已处理</a></li>
+    </ul>
+
+    <div class="container mt-3">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th class="text-center">Project</th>
+                    <th class="text-center">RuleId</th>
+                    <th class="text-center">Location</th>
+                    <th class="text-center">PushedAt</th>
+                    <th class="text-center">Operation</th>
+                </tr>
+                </thead>
+                <tbody>
+                {{ range $key,$value := .vuls }}
+                    <div class="accordion">
+                        <tr>
+                            <td class="text-center" data-bs-toggle="collapse" data-bs-target="#r{{ $value.Id }}">
+                                <button type="button" class="btn btn-outline-primary">{{ $value.Project }}</button>
+                            </td>
+                            <td class="text-center text-danger">{{ $value.RuleId }}</td>
+                            <td class="text-center">
+                                {{ range $k,$v := $value.Location }}
+                                    <ul class="nav nav-pills nav-stacked justify-content-center">
+                                        <li class="text-center"><a href="{{ $v }}" target="_blank">{{ $k }}</a></li>
+                                    </ul>
+                                {{ end}}
+                            </td>
+                            <td class="text-center">{{ $value.PushedAt }}</td>
+                            <td class="text-center">
+                                <button type="button" data-mdb-ripple-centered="true" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#del{{ $value.Id }}">删除</button>
+                                <!-- 模态框 -->
+                                <div class="modal fade" id="del{{ $value.Id }}">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <!-- 模态框头部 -->
+                                            <div class="modal-header">
+                                                <h4 class="modal-title">是否删除</h4>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form action="/del" method='GET'>
+                                                <!-- 模态框内容 -->
+                                                <div class="modal-body">
+                                                    <div class="mb-3 mt-3">
+                                                        <label for="url" class="form-label">{{ $value.Id }} {{ $value.Project }}</label>
+                                                    </div>
+                                                </div>
+                                                <input type="hidden" name="id" value="{{ $value.Id }}">
+                                                <div class="modal-footer">
+                                                    <button type="submit" class="btn btn-danger">是</button>
+                                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">否</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" data-mdb-ripple-centered="true" class="btn btn-dark" data-bs-target="#blacklist{{ $value.Id }}" data-bs-toggle="modal">拉黑</button>
+                                <!-- 模态框 -->
+                                <div class="modal fade" id="blacklist{{ $value.Id }}">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <!-- 模态框头部 -->
+                                            <div class="modal-header">
+                                                <h4 class="modal-title">是否拉黑</h4>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+
+                                            <form action="/blacklist" method='GET'>
+                                                <input type="hidden" name="id" value="{{ $value.Id }}">
+                                                <!-- 模态框内容 -->
+                                                <div class="modal-body">
+                                                    <div class="mb-3 mt-3">
+                                                        <label for="url" class="form-label">拉黑的同时会删除!</label>
+                                                        <label for="url" class="form-label">{{ $value.Id }} {{ $value.Project }}</label>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="submit" class="btn btn-danger">是</button>
+                                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">否</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <a type="button" class="btn btn-outline-primary" href="/download?fileDir={{ $value.ResDir }}">下载</a>
+                            </td>
+                        </tr>
+                    </div>
+                {{ else }}
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                {{ end}}
+                </tbody>
+            </table>
+            {{if gt .paginator.PageNums 1}}
+                <ul class="pagination justify-content-center">
+                    {{if .paginator.HasPrev}}
+                        <li class="page-item"><a class="page-link" href="{{.paginator.PageLinkFirst}}">首页</a></li>
+                        <li class="page-item"><a class="page-link" href="{{.paginator.PageLinkPrev}}">&lt;上一页</a></li>
+                    {{else}}
+                        <li class="page-item"><a class="page-link">首页</a></li>
+                        <li class="page-item"><a class="page-link">&lt;上一页</a></li>
+                    {{end}}
+                    {{range $index, $page := .paginator.Pages}}
+                        <li{{if $.paginator.IsActive .}} class="page-item active"{{end}}>
+                            <a class="page-link" href="{{$.paginator.PageLink $page}}">{{$page}}</a>
+                        </li>
+                    {{end}}
+                    {{if .paginator.HasNext}}
+                        <li class="page-item"><a class="page-link" href="{{.paginator.PageLinkNext}}">下一页&gt;</a></li>
+                        <li class="page-item"><a class="page-link" href="{{.paginator.PageLinkLast}}">尾页</a></li>
+                    {{else}}
+                        <li class="page-item"><a class="page-link">下一页&gt;</a></li>
+                        <li class="page-item"><a class="page-link">尾页</a></li>
+                    {{end}}
+                </ul>
+            {{end}}
+        </div>
+</div>
+</body>
+<footer class="text-center text-lg-start">
+    <!-- Copyright -->
+    <div class="text-center p-3">
+        © {{ .year}} Copyright:
+        <a class="text-dark" href="https://github.com/yhy0" target="_blank">yhy</a>
+    </div>
+    <!-- Copyright -->
+</footer>
+</html>
+
