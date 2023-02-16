@@ -1,8 +1,9 @@
 package test
 
 import (
+	"Yi/pkg/runner"
+	"Yi/pkg/utils"
 	"fmt"
-	"path/filepath"
 	"testing"
 )
 
@@ -30,6 +31,6 @@ func TestGithub(t *testing.T) {
 	//results := jsoniter.Get(body).Keys()
 	//
 	//fmt.Println(results)
-
-	fmt.Println(filepath.Join("../", filepath.Clean("/"+".../../../../../../../etc/passwd")))
+	runner.Option.Session = utils.NewSession("")
+	fmt.Println(runner.GetLanguage("https://api.github.com/repos/agragregra/OptimizedHTML-4", "https://github.com/agragregra/OptimizedHTML-4"))
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
 	"html/template"
+	"io/fs"
 	"net/http"
 	"os"
 	"strconv"
@@ -43,14 +44,11 @@ func Init() {
 	gin.SetMode("release")
 	router := gin.Default()
 
-	// 静态资源加载
-	//router.Static("/static", Path("static"))
-	//// 模板加载
-	//templatesPath := Path("templates/*")
-	//router.LoadHTMLGlob(templatesPath)
-
 	router.Static("/db/results/", "./db/results/")
-	router.StaticFS("/static", http.FS(static))
+
+	// 静态资源加载
+	router.StaticFS("/static", mustFS())
+
 	// 设置模板资源
 	router.SetHTMLTemplate(template.Must(template.New("").ParseFS(templates, "templates/*")))
 
@@ -319,4 +317,14 @@ func Init() {
 
 	pprof.Register(router)
 	router.Run(":" + runner.Option.Port)
+}
+
+func mustFS() http.FileSystem {
+	sub, err := fs.Sub(static, "static")
+
+	if err != nil {
+		panic(err)
+	}
+
+	return http.FS(sub)
 }

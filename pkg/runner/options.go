@@ -28,6 +28,7 @@ type Options struct {
 	Port     string
 	Thread   int
 	Session  *utils.Session
+	RunNow   bool
 }
 
 var Option Options
@@ -58,6 +59,7 @@ func ParseArguments() {
 	flag.StringVar(&Option.Pwd, "pwd", "", "http pwd")
 	flag.StringVar(&Option.Path, "path", "", "codeql path")
 	flag.StringVar(&Option.Port, "port", "8888", "web port(default: 8888)")
+	flag.BoolVar(&Option.RunNow, "run", false, "The loop scan does not wait 24 hours and is executed immediately.(default: false)")
 	flag.IntVar(&Option.Thread, "thread", 5, "thread")
 	flag.Parse()
 

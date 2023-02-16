@@ -21,12 +21,15 @@ import (
 **/
 
 func Analyze(database string, name string, language string, qls []string) map[string]string {
-	if qls == nil {
-		if strings.ToLower(language) == "go" {
-			qls = QLFiles.GoQL
-		} else if strings.ToLower(language) == "java" {
-			qls = QLFiles.JavaQL
-		}
+	if language == "Go" {
+		qls = QLFiles.GoQL
+	} else if language == "Java" {
+		qls = QLFiles.JavaQL
+	}
+
+	if len(qls) == 0 {
+		logging.Logger.Debugln("qls = 0")
+		return nil
 	}
 
 	res := make(map[string]string)
@@ -49,10 +52,14 @@ func Analyze(database string, name string, language string, qls []string) map[st
 
 		lines := utils.LoadFile(fileName)
 
+		if len(lines) == 0 {
+			continue
+		}
+
 		var result string
 
-		for _, i := range lines {
-			result += i
+		for _, line := range lines {
+			result += line
 		}
 		res[fileName] = result
 
@@ -72,10 +79,7 @@ func Analyze(database string, name string, language string, qls []string) map[st
 }
 
 // CreateDb 拉取仓库，本地创建数据库
-func CreateDb(gurl string, res *githubRes, name string) string {
-	if !utils.StringInSlice(res.Language, Languages) {
-		return ""
-	}
+func CreateDb(gurl, languages string) string {
 	dbName := utils.GetName(gurl)
 	err := GitClone(gurl, dbName)
 
@@ -85,7 +89,7 @@ func CreateDb(gurl string, res *githubRes, name string) string {
 	}
 
 	// todo 批量跑就抽风，导致有的项目无法生成数据库 "There's no CodeQL extractor named 'Go' installed."
-	cmd := exec.Command("codeql", "database", "create", DirNames.DbDir+dbName, "-s", DirNames.GithubDir+dbName, "--language="+strings.ToLower(res.Language), "--overwrite")
+	cmd := exec.Command("codeql", "database", "create", DirNames.DbDir+dbName, "-s", DirNames.GithubDir+dbName, "--language="+strings.ToLower(languages), "--overwrite")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout // 标准输出
 	cmd.Stderr = &stderr // 标准错误
@@ -98,12 +102,27 @@ func CreateDb(gurl string, res *githubRes, name string) string {
 
 	// 很奇怪，有的生成数据库不是在项目目录下，而是在第二级目录下
 	dbPath := filepath.Dir(path.Join(utils.CodeqlDb(DirNames.DbDir+dbName), "*"))
+	logging.Logger.Debugln(gurl, " CreateDb success")
 	return dbPath
 }
 
 // UpdateRule 每天拉取一下官方仓库，更新规则
 func UpdateRule() {
 	if Option.Path != "" {
-		utils.RunGitCommand(Option.Path, "git", "pull")
+		_, err := utils.RunGitCommand(Option.Path, "git", "pull")
+		record := db.Record{
+			Project: "CodeQL Rules",
+			Url:     "CodeQL Rules",
+			Color:   "success",
+			Title:   "CodeQL Rules",
+			Msg:     "CodeQL Rules 更新成功",
+		}
+
+		if err != nil {
+			record.Color = "danger"
+			record.Msg = fmt.Sprintf("CodeQL Rules 更新失败, %s", err.Error())
+		}
+
+		db.AddRecord(record)
 	}
 }

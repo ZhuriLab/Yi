@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"github.com/dustin/go-humanize"
+	"github.com/thoas/go-funk"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -109,37 +110,14 @@ func isSupportedProtocol(value string) bool {
 	return value == "http" || value == "https" || value == "socks5"
 }
 
-func Difference(slice1, slice2 []string) []string {
-	intersect := func(slice1, slice2 []string) []string {
-		m := make(map[string]int)
-		nn := make([]string, 0)
-		for _, v := range slice1 {
-			m[v]++
-		}
+// Difference 找出更改的规则，如果是新增了，则运行该规则，删除则不运行
+func Difference(old, new []string) []string {
+	_, s2 := funk.Difference(old, new)
 
-		for _, v := range slice2 {
-			times, _ := m[v]
-			if times == 1 {
-				nn = append(nn, v)
-			}
-		}
-		return nn
-	}
+	// {"1", "2", "5"} {"3", "5"} 结果 [1 2] [3]
+	// {"1", "2", "3", "4"} {"1", "2", "3"} 结果 [4] []
 
-	m := make(map[string]int)
-	nn := make([]string, 0)
-	inter := intersect(slice1, slice2)
-	for _, v := range inter {
-		m[v]++
-	}
-
-	for _, value := range slice1 {
-		times, _ := m[value]
-		if times == 0 && value != "" {
-			nn = append(nn, value)
-		}
-	}
-	return nn
+	return s2.([]string)
 }
 
 // RunGitCommand 执行任意Git命令的封装
@@ -149,7 +127,10 @@ func RunGitCommand(path, name string, arg ...string) (string, error) {
 	cmd := exec.Command(name, arg...)
 	cmd.Dir = gitpath                // 指定工作目录为git仓库目录
 	msg, err := cmd.CombinedOutput() // 混合输出stdout+stderr
-	cmd.Run()
+	err = cmd.Run()
+	if err != nil {
+		return "", err
+	}
 
 	// 报错时 exit status 1
 	return string(msg), err

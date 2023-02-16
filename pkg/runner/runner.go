@@ -6,6 +6,7 @@ import (
 	"Yi/pkg/utils"
 	"fmt"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/thoas/go-funk"
 	"os"
 	"strings"
 	"sync"
@@ -31,24 +32,19 @@ func Run() {
 				return
 			}
 			name := utils.GetName(Option.Target)
-			err, dbPath, res := DownloadDb(Option.Target, "")
+			err, dbPath, res := GetRepos(Option.Target)
 
 			project = db.Project{
 				Project:       name,
-				DBPath:        dbPath,
 				Url:           Option.Target,
 				Language:      res.Language,
+				DBPath:        dbPath,
 				PushedAt:      res.PushedAt,
 				Count:         0,
 				DefaultBranch: res.DefaultBranch,
 			}
 
-			if err != nil || dbPath == "" {
-				// 下载失败，有可能是对方没有使用 codeql 自动化扫描，所以没有创建数据库，这里直接拉取到本地，手动创建
-				dbPath = CreateDb(Option.Target, res, name)
-			}
-
-			if dbPath == "" { // 即使不能扫描，也加入数据库
+			if err != nil {
 				db.AddProject(project)
 				return
 			}
@@ -76,16 +72,11 @@ func Run() {
 						return
 					}
 					name := utils.GetName(target)
-					err, dbPath, res := DownloadDb(target, "")
+					err, dbPath, res := GetRepos(target)
 
-					if err != nil || dbPath == "" {
-						// 下载失败，有可能是对方没有使用 codeql 自动化扫描，所以没有创建数据库，这里直接拉取到本地，手动创建
-						dbPath = CreateDb(target, res, name)
-					}
-
-					if res == nil {
-						res.Language = ""
-						res.PushedAt = ""
+					if err != nil {
+						db.AddProject(project)
+						return
 					}
 
 					project = db.Project{
@@ -98,11 +89,7 @@ func Run() {
 						Count:         0,
 					}
 
-					if dbPath != "" {
-						projects <- project
-					} else {
-						db.AddProject(project)
-					}
+					projects <- project
 
 				}(target)
 			}
@@ -127,6 +114,9 @@ func Run() {
 
 	wg.Wait()
 	close(limit)
+
+	// 全部运行完后，开始对出错的项目进行重试
+	IsRetry = true
 }
 
 func WgExec(project db.Project, wg *sync.WaitGroup, limit chan bool) {
@@ -150,11 +140,20 @@ func WgExec(project db.Project, wg *sync.WaitGroup, limit chan bool) {
 var LocationMaps = make(map[string]bool)
 
 func Exec(project db.Project, qls []string) {
-	logging.Logger.Debugln("start exec project: ", project.Project)
-	if !utils.StringInSlice(project.Language, Languages) {
+	if !funk.Contains(Languages, project.Language) || project.DBPath == "" {
+		logging.Logger.Debugf("(%s)当前语言不支持(%s)/数据库为空(%s)", project.Project, project.Language, project.DBPath)
 		return
 	}
-	for fileName, res := range Analyze(project.DBPath, project.Project, project.Language, qls) {
+
+	logging.Logger.Debugln("start exec project: ", project.Project)
+
+	analyze := Analyze(project.DBPath, project.Project, project.Language, qls)
+
+	if analyze != nil {
+		return
+	}
+
+	for fileName, res := range analyze {
 		results := jsoniter.Get([]byte(res), "runs", 0, "results")
 
 		if results.Size() > 0 {
@@ -219,7 +218,7 @@ func ApiAdd(target, tag string) {
 	exist, project = db.Exist(target)
 	if !exist {
 		name := utils.GetName(target)
-		err, dbPath, res := DownloadDb(target, "")
+		err, dbPath, res := GetRepos(target)
 		if err != nil {
 			record := db.Record{
 				Project: target,
@@ -243,6 +242,17 @@ func ApiAdd(target, tag string) {
 		}
 		id, _ := db.AddProject(project)
 		project.Id = id
+	} else {
+		project.Count += 1
+
+		record := db.Record{
+			Project: project.Project,
+			Url:     project.Url,
+			Color:   "success",
+			Title:   project.Project,
+			Msg:     fmt.Sprintf("%s 已存在，重新运行", project.Url),
+		}
+		db.AddRecord(record)
 	}
 
 	Exec(project, nil)

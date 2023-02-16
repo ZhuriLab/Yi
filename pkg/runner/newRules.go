@@ -22,18 +22,18 @@ func NewRules(oldQls *QLFile, newQls *QLFile) {
 	if len(goQLs) != 0 {
 		var projects []db.Project
 		globalDBTmp.Where("language = Go").Order("id asc").Find(&projects)
-		scan(projects)
+		scan(projects, goQLs)
 	}
 
 	if len(javaQls) != 0 {
 		var projects []db.Project
 		globalDBTmp.Where("language = Java").Order("id asc").Find(&projects)
-		scan(projects)
+		scan(projects, javaQls)
 	}
 
 }
 
-func scan(projects []db.Project) {
+func scan(projects []db.Project, qls []string) {
 	var wg sync.WaitGroup
 	limit := make(chan bool, Option.Thread)
 
@@ -43,7 +43,7 @@ func scan(projects []db.Project) {
 		}
 		wg.Add(1)
 		limit <- true
-		Exec(project, nil)
+		Exec(project, qls)
 		<-limit
 		wg.Done()
 	}

@@ -15,6 +15,7 @@ func main() {
 	runner.ParseArguments()
 	go runner.Cyclic()
 	go runner.Run()
+	go runner.Retry()
 
 	web.Init()
 }

@@ -20,7 +20,8 @@ func GitClone(gurl string, name string) error {
 	err := cmd.Run()
 	_, errStr := string(stdout.Bytes()), string(stderr.Bytes())
 	if err != nil {
-		logging.Logger.Errorf("GitClone cmd.Run() failed with %s --  %s\n", err, errStr)
+		logging.Logger.Errorf("GitClone(%s) cmd.Run() failed with %s --  %s\n", gurl, err, errStr)
+
 		return err
 	}
 	return nil

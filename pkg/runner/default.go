@@ -43,10 +43,8 @@ go_ql:
   - go/ql/src/Security/CWE-643/XPathInjection.ql
   # 硬编码认证信息
   - go/ql/src/Security/CWE-798/HardcodedCredentials.ql	
-  # 重定向
-  - go/ql/src/myRules/UrlRedirect.ql
-  # 任意文件读取
-  - go/ql/src/myRules/ReadFile.ql
+  # 自定义规则
+  - go/ql/src/myRules/
 java_ql:
   # 路径问题
   - java/ql/src/Security/CWE/CWE-022/TaintedPath.ql
