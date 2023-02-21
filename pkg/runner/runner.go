@@ -149,10 +149,6 @@ func Exec(project db.Project, qls []string) {
 
 	analyze := Analyze(project.DBPath, project.Project, project.Language, qls)
 
-	if analyze != nil {
-		return
-	}
-
 	for fileName, res := range analyze {
 		results := jsoniter.Get([]byte(res), "runs", 0, "results")
 
