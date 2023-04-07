@@ -235,6 +235,9 @@ func CheckUpdate(project db.Project) (bool, string, string) {
 				Url:  project.Url,
 				Code: code,
 			}
+		} else {
+			// 是否在重试列表中
+			delete(RetryProject, project.Url)
 		}
 	}
 

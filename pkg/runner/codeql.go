@@ -37,8 +37,8 @@ func Analyze(database string, name string, language string, qls []string) map[st
 	os.MkdirAll(filePath, 0755)
 
 	logging.Logger.Infof("[[%s:%s]] analyze start ...", name, database)
-	fileName := fmt.Sprintf("%s/%d.json", filePath, time.Now().Unix())
 	for i, ql := range qls {
+		fileName := fmt.Sprintf("%s/%d.json", filePath, time.Now().Unix())
 		cmd := exec.Command("codeql", "database", "analyze", "--rerun", database, Option.Path+ql, "--format=sarif-latest", "-o", fileName)
 		var stdout, stderr bytes.Buffer
 		cmd.Stdout = &stdout // 标准输出

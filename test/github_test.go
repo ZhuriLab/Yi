@@ -33,4 +33,19 @@ func TestGithub(t *testing.T) {
 	//fmt.Println(results)
 	runner.Option.Session = utils.NewSession("")
 	fmt.Println(runner.GetLanguage("https://api.github.com/repos/agragregra/OptimizedHTML-4", "https://github.com/agragregra/OptimizedHTML-4"))
+
+	asd := make(map[string]string)
+
+	delete(asd, "11")
+
+	fmt.Println("1 ", asd)
+
+	asd["11"] = "12"
+
+	delete(asd, "22")
+
+	fmt.Println(asd)
+	delete(asd, "11")
+
+	fmt.Println(asd)
 }

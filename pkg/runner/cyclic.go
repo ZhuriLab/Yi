@@ -21,6 +21,8 @@ func Cyclic() {
 		// 等待24小时后再循环执行
 		if !Option.RunNow {
 			time.Sleep(24 * 60 * time.Minute)
+			// 开始检查更新时， 停止重试的检查
+			IsRetry = false
 		}
 
 		Option.RunNow = false
