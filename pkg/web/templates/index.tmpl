@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.staticfile.org/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.staticfile.org/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+
     <style>
         .table tbody tr td{
             vertical-align: middle;
         }
-
     </style>
     <title>弈 以有算无</title>
 </head>
@@ -53,11 +53,7 @@
 <body>
 <div class="container mt-3">
     <div class="px-3 py-2 mb-3">
-        <div class="container  flex-wrap justify-content-center">
-            <form class="col-12 col-lg-auto mb-2 mb-lg-0 me-lg-auto" action="/index">
-                <input type="search" class="form-control" placeholder="Search..." aria-label="Search" name="project">
-            </form>
-        </div>
+        {{template "search.tmpl"}}
     </div>
     <div class="container mt-3">
         <ul class="nav">
@@ -200,12 +196,5 @@
     </div>
 </div>
 </body>
-<footer class="text-center text-lg-start">
-    <!-- Copyright -->
-    <div class="text-center p-3">
-        © {{ .year}} Copyright:
-        <a class="text-dark" href="https://github.com/yhy0" target="_blank">yhy</a>
-    </div>
-    <!-- Copyright -->
-</footer>
+{{template "footer.tmpl"}}
 </html>

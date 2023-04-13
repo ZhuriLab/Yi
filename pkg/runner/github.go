@@ -47,13 +47,14 @@ func GetRepos(url_tmp string) (error, string, GithubRes) {
 	res := GetTimeBran(guri, url_tmp)
 	// https://api.github.com/repos/grafana/grafana 这里只会显示项目中使用最多的语言，但并不一定是项目的主语言，比如这个显示TypeScript，但其实用了 Go 写的
 
+	var flag bool
 	// repos 中的语言只是占比最多的语言种类，有可能 go 写的 typescript 占比最多
-	res.Language = GetLanguage(guri, url_tmp) // todo 现在只是适配 Go,java 语言，后期尽量适配主流语言是，目前主力只看 Go 项目
+	res.Language, flag = GetLanguage(guri, url_tmp) // todo 现在只是适配 Go,java 语言，后期尽量适配主流语言是，目前主力只看 Go 项目
 
-	if res.Language != "" {
+	if flag {
 		guri = fmt.Sprintf("%s/code-scanning/codeql/databases/%s", guri, res.Language)
 	} else {
-		return errors.New("no Language"), "", res
+		return errors.New("language does not support"), "", res
 	}
 
 	err, dbPath, code := GetDb(guri, url_tmp, res.Language)
@@ -100,7 +101,7 @@ func GetTimeBran(guri, url_tmp string) GithubRes {
 }
 
 // GetLanguage 获取项目的代码语言  https://api.github.com/repos/prometheus/prometheus/languages
-func GetLanguage(guri, url_tmp string) string {
+func GetLanguage(guri, url_tmp string) (string, bool) {
 	req, _ := http.NewRequest("GET", guri+"/languages", nil)
 	req.Header.Set("Accept", "application/vnd.github.v3.text-match+json")
 	if Option.Token != "" {
@@ -118,18 +119,18 @@ func GetLanguage(guri, url_tmp string) string {
 			Url:  url_tmp,
 			Code: 1,
 		}
-		return ""
+		return "", false
 	}
 
 	defer resp.Body.Close()
-
+	var language string
 	if resp.Body != nil {
 		body, err := ioutil.ReadAll(resp.Body)
 
 		if err != nil {
-			return ""
+			return "", false
 		}
-		var language string
+
 		var m float64 = 1
 
 		// 去除 HTML,TypeScript,JavaScript,CSS,SCSS 这些玩意，之后，该项目的编写语言就是使用最多的语言
@@ -138,17 +139,23 @@ func GetLanguage(guri, url_tmp string) string {
 				continue
 			}
 
-			if v.(float64) > m {
+			switch v.(type) {
+			case float64:
+				if v.(float64) > m {
+					language = k
+					m = v.(float64)
+				}
+			default:
 				language = k
-				m = v.(float64)
+				logging.Logger.Errorf("GetLanguage err %s %s", guri, body)
 			}
 		}
 		if funk.Contains(Languages, language) {
-			return language
+			return language, true
 		}
 	}
 
-	return ""
+	return language, false
 }
 
 // GetDb 下载/生成 数据库  https://api.github.com/repos/prometheus/prometheus/code-scanning/codeql/databases/{languages}

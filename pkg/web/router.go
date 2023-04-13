@@ -15,6 +15,7 @@ import (
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/thoas/go-funk"
 	"html/template"
 	"io/fs"
 	"net/http"
@@ -62,16 +63,19 @@ func Init() {
 	})
 
 	authorized.GET("/index", func(c *gin.Context) {
-		project := c.Query("project")
-		language := c.Query("language")
+		search := c.Query("search")
 
 		maps := make(map[string]interface{})
 
-		if project != "" {
-			maps["project"] = project
-		}
-		if language != "" {
-			maps["language"] = language
+		if search != "" {
+			if funk.Contains(search, "l:") {
+				language := strings.Split(search, "l:")
+				if len(language) > 1 {
+					maps["language"] = strings.TrimSpace(language[1])
+				}
+			} else {
+				maps["project"] = strings.TrimSpace(search)
+			}
 		}
 
 		pageSize, _ := strconv.Atoi(c.Query("pageSize"))
@@ -153,16 +157,18 @@ func Init() {
 	})
 
 	authorized.GET("/unhandled", func(c *gin.Context) {
-		project := c.Query("project")
-		rule_id := c.Query("rule_id")
-
+		search := c.Query("search")
 		maps := make(map[string]interface{})
 
-		if project != "" {
-			maps["project"] = project
-		}
-		if rule_id != "" {
-			maps["rule_id"] = rule_id
+		if search != "" {
+			if funk.Contains(search, "r:") {
+				rule := strings.Split(search, "r:")
+				if len(rule) > 1 {
+					maps["rule_id"] = strings.TrimSpace(rule[1])
+				}
+			} else {
+				maps["project"] = strings.TrimSpace(search)
+			}
 		}
 
 		pageSize, _ := strconv.Atoi(c.Query("pageSize"))
@@ -187,7 +193,7 @@ func Init() {
 		for _, vul := range data {
 			location := make(map[string]string)
 			for _, k := range jsoniter.Get(vul.Location).Keys() {
-				location[k] = fmt.Sprintf("%s/blob/%s/%s", vul.Url, vul.DefaultBranch, k)
+				location[k] = fmt.Sprintf("%s/blob/%s/%s", strings.ReplaceAll(vul.Url, "https://github.com/", "https://github.dev/"), vul.DefaultBranch, k)
 			}
 			vuls = append(vuls, Vul{
 				Id:       vul.Id,
@@ -212,17 +218,19 @@ func Init() {
 	})
 
 	authorized.GET("/handled", func(c *gin.Context) {
-
-		project := c.Query("project")
-		rule_id := c.Query("rule_id")
+		search := c.Query("search")
 
 		maps := make(map[string]interface{})
 
-		if project != "" {
-			maps["project"] = project
-		}
-		if rule_id != "" {
-			maps["rule_id"] = rule_id
+		if search != "" {
+			if funk.Contains(search, "r:") {
+				rule := strings.Split(search, "r:")
+				if len(rule) > 1 {
+					maps["rule_id"] = strings.TrimSpace(rule[1])
+				}
+			} else {
+				maps["project"] = strings.TrimSpace(search)
+			}
 		}
 
 		pageSize, _ := strconv.Atoi(c.Query("pageSize"))
@@ -247,7 +255,7 @@ func Init() {
 		for _, vul := range data {
 			location := make(map[string]string)
 			for _, k := range jsoniter.Get(vul.Location).Keys() {
-				location[k] = fmt.Sprintf("%s/blob/%s/%s", vul.Url, vul.DefaultBranch, k)
+				location[k] = fmt.Sprintf("%s/blob/%s/%s", strings.ReplaceAll(vul.Url, "https://github.com/", "https://github.dev/"), vul.DefaultBranch, k)
 			}
 			vuls = append(vuls, Vul{
 				Id:       vul.Id,

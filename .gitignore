@@ -1,6 +1,7 @@
 # Binaries for programs and plugins
 *.db
 .idea
+data
 logs
 test
 .DS_Store

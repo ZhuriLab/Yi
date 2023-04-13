@@ -1,0 +1,119 @@
+{{ define "search.tmpl"}}
+    <style>
+        #search-suggestions {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 0;
+            width: 100%;
+            max-height: 200px;
+            overflow: auto;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            z-index: 1;
+            display: none;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+        #search-suggestions li {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+        }
+        #search-suggestions li:last-child {
+            border-bottom: none;
+        }
+        #search-suggestions li:hover {
+            background-color: #eee;
+        }
+    </style>
+
+    <script>
+        // ChatGPT
+        window.onload = function() {
+            const searchInput = document.getElementById("search-input");
+            const searchSuggestions = document.getElementById("search-suggestions");
+
+            searchInput.addEventListener("input", function(event) {
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                if (searchTerm.length > 0) {
+                    // 获取历史记录，如果没有则初始化为空数组
+                    const searchHistory = JSON.parse(localStorage.getItem("searchHistory")) || [];
+                    // 过滤出匹配的历史记录
+                    const matchingSearchHistory = searchHistory.filter(function(historyTerm) {
+                        return historyTerm.toLowerCase().startsWith(searchTerm);
+                    });
+                    // 显示匹配的历史记录
+                    if (matchingSearchHistory.length > 0) {
+                        searchSuggestions.style.display = "block";
+                        searchSuggestions.innerHTML = matchingSearchHistory.map(function(historyTerm) {
+                            return `<li class="list-group-item">${historyTerm}</li>`;
+                        }).join("");
+                    } else {
+                        searchSuggestions.style.display = "none";
+                    }
+                } else {
+                    searchSuggestions.style.display = "none";
+                }
+            });
+
+            searchInput.addEventListener("keydown", function(event) {
+                if (event.key === "Enter") {
+                    const searchTerm = searchInput.value.trim();
+                    if (searchTerm.length > 0) {
+                        // 获取历史记录，如果没有则初始化为空数组
+                        const searchHistory = JSON.parse(localStorage.getItem("searchHistory")) || [];
+                        // 判断历史记录中是否已包含该搜索词，如果包含则不添加，否则添加到开头
+                        if (!searchHistory.includes(searchTerm)) {
+                            searchHistory.unshift(searchTerm);
+                        }
+                        // 只保留前20个搜索记录
+                        const trimmedSearchHistory = searchHistory.slice(0, 20);
+                        // 保存搜索历史到 localStorage
+                        localStorage.setItem("searchHistory", JSON.stringify(trimmedSearchHistory));
+                    }
+                }
+            });
+
+            searchInput.addEventListener("focus", function(event) {
+                const searchHistory = JSON.parse(localStorage.getItem("searchHistory")) || [];
+                if (searchHistory.length > 0) {
+                    const searchSuggestions = document.getElementById("search-suggestions");
+                    searchSuggestions.innerHTML = "";
+                    searchHistory.forEach(function(historyTerm) {
+                        const suggestion = document.createElement("li");
+                        suggestion.classList.add("search-suggestion");
+                        suggestion.textContent = historyTerm;
+                        searchSuggestions.appendChild(suggestion);
+                    });
+                    searchSuggestions.style.display = "block";
+                }
+            });
+
+            searchInput.addEventListener("blur", function(event) {
+                const searchSuggestions = document.getElementById("search-suggestions");
+                searchSuggestions.style.display = "none";
+            });
+
+            searchSuggestions.addEventListener("mousedown", function(event) {
+                if (event.target.matches("li")) {
+                    const selectedTerm = event.target.innerText;
+                    searchInput.value = selectedTerm;
+                    searchSuggestions.style.display = "none";
+                }
+            });
+        }
+    </script>
+
+<main>
+    <div class="container  flex-wrap justify-content-center">
+        <form class="col-12 col-lg-auto mb-2 mb-lg-0 me-lg-auto">
+            <div class="position-relative">
+                <input type="search" class="form-control" placeholder="search Project: harbor ;search RuleId: r:xss " aria-label="Search" name="search" id="search-input">
+                <ul id="search-suggestions" class="list-group position-absolute w-100 bg-white rounded-3 mt-1" style="display: none;"></ul>
+            </div>
+        </form>
+    </div>
+</main>
+{{end}}

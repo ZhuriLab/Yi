@@ -74,21 +74,22 @@ func Run() {
 					name := utils.GetName(target)
 					err, dbPath, res := GetRepos(target)
 
+					project = db.Project{
+						Project:  name,
+						Url:      target,
+						Language: res.Language,
+						Count:    0,
+					}
+
 					if err != nil {
+						logging.Logger.Errorf("Add err(%s[%s]):%v", target, res.Language, err)
 						db.AddProject(project)
 						return
 					}
 
-					project = db.Project{
-						Project:       name,
-						DBPath:        dbPath,
-						Url:           target,
-						Language:      res.Language,
-						PushedAt:      res.PushedAt,
-						DefaultBranch: res.DefaultBranch,
-						Count:         0,
-					}
-
+					project.DBPath = dbPath
+					project.PushedAt = res.PushedAt
+					project.DefaultBranch = res.DefaultBranch
 					projects <- project
 
 				}(target)

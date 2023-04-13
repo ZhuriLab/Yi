@@ -10,6 +10,26 @@
     <script src="/static/jquery.json-viewer.js"></script>
     <link href="/static/jquery.json-viewer.css" type="text/css" rel="stylesheet">
 
+    <script>
+        $(function() {
+            $('table td').each(function() {
+                var $ul = $(this).find('ul');
+                if ($ul.length > 0 && $ul.children().length > 5) {
+                    var $button = $('<button class="btn btn-sm btn-primary">展开/折叠</button>');
+                    var $hidden = $ul.children().slice(5).hide();
+                    var $count = $('<span class="badge badge-secondary"></span>');
+                    $count.text($hidden.length);
+                    $button.append(' ').append($count);
+                    $button.on('click', function() {
+                        $hidden.toggle();
+                        $button.text($hidden.is(':visible') ? '折叠' : '展开 ' + $hidden.length);
+                        $count.text($hidden.is(':visible') ? $hidden.length : '');
+                    });
+                    $(this).append($button);
+                }
+            });
+        });
+    </script>
     <style>
         pre {
             border: 1px solid #aaa;
@@ -61,11 +81,7 @@
 <body>
     <div class="container mt-3">
     <div class="px-3 py-2 mb-3">
-        <div class="container  flex-wrap justify-content-center">
-            <form class="col-12 col-lg-auto mb-2 mb-lg-0 me-lg-auto">
-                <input type="search" class="form-control" placeholder="Search..." aria-label="Search" name="project">
-            </form>
-        </div>
+        {{template "search.tmpl"}}
     </div>
     <div class="container mt-3">
         <ul class="nav">
@@ -100,11 +116,15 @@
                             </td>
                             <td class="text-center text-danger">{{ $value.RuleId }}</td>
                             <td class="text-center">
-                                {{ range $k,$v := $value.Location }}
-                                    <ul class="nav nav-pills nav-stacked justify-content-center">
-                                        <li class="text-center"><a href="{{ $v }}" target="_blank">{{ $k }}</a></li>
-                                    </ul>
-                                {{ end}}
+                                <ul class="list-group-flush">
+                                    {{ range $k,$v := $value.Location }}
+                                        {{ $displayValue := $k }}
+                                        {{ if gt (len $k) 30 }}
+                                            {{ $displayValue = printf "%s..." (slice $k 0 27) }}
+                                        {{ end }}
+                                        <li class="list-group-item" title="{{ $k }}"><a href="{{ $v }}" target="_blank">{{ $displayValue }}</a></li>
+                                    {{ end}}
+                                </ul>
                             </td>
                             <td class="text-center">{{ $value.PushedAt }}</td>
                             <td class="text-center">
@@ -205,13 +225,6 @@
         </div>
 </div>
 </body>
-<footer class="text-center text-lg-start">
-    <!-- Copyright -->
-    <div class="text-center p-3">
-        © {{ .year}} Copyright:
-        <a class="text-dark" href="https://github.com/yhy0" target="_blank">yhy</a>
-    </div>
-    <!-- Copyright -->
-</footer>
+{{template "footer.tmpl"}}
 </html>
 

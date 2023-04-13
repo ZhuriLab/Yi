@@ -63,7 +63,7 @@ func Analyze(database string, name string, language string, qls []string) map[st
 		}
 		res[fileName] = result
 
-		ProgressBar[name] = float32(i) / float32(len(qls)) * 100
+		ProgressBar[name] = float32(i+1) / float32(len(qls)) * 100
 	}
 
 	logging.Logger.Infof("[[%s:%s]] analysis completed.", name, database)
@@ -74,6 +74,7 @@ func Analyze(database string, name string, language string, qls []string) map[st
 		Title:   name,
 		Msg:     fmt.Sprintf("%s 分析完毕", name),
 	}
+	ProgressBar[name] = 100
 	db.AddRecord(record)
 	return res
 }
